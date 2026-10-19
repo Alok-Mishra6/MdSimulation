@@ -8,7 +8,8 @@ cd "$WORK"
 
 say "[$1] minimising"
 $GMX grompp -f "$MDP/em.mdp" -c system.gro -r system.gro -p topol.top -o em.tpr -maxwarn 0
-$GMX mdrun -deffnm em -nb gpu ${GMX_MDRUN_EXTRA:-}
+# shellcheck disable=SC2086
+$GMX mdrun -deffnm em $EM_OFFLOAD ${GMX_MDRUN_EXTRA:-}
 
 say "[$1] result"
 printf 'Potential\nMax-Force\n' | $GMX energy -f em.edr -o em_potential.xvg 2>/dev/null \

@@ -28,6 +28,17 @@ fi
 mkdir -p "$WORK"
 cd "$WORK"
 
+case "$HMR" in yes|no) ;; *) die "HMR must be 'yes' or 'no', not '$HMR'" ;; esac
+case "$NTERM_TRIM" in ''|*[!0-9]*) die "NTERM_TRIM must be a whole number" ;; esac
+# Every later stage reads these back (load_settings in lib.sh).
+printf 'NTERM_TRIM=%s\nHMR=%s\n' "$NTERM_TRIM" "$HMR" > settings.sh
+
+if [ "$NTERM_TRIM" -gt 0 ]; then
+    say "[$SYS] trimming residues 1-$NTERM_TRIM of each chain"
+    python3 "$HERE/trim_nterm.py" "$PROTEIN" protein_trimmed.pdb "$NTERM_TRIM"
+    PROTEIN=protein_trimmed.pdb
+fi
+
 say "[$SYS] 1/5  pdb2gmx: topology and hydrogens ($FORCEFIELD, $WATERMODEL)"
 # AlphaFold gives heavy atoms only, so every hydrogen is built here. -ignh is
 # set anyway: it makes the step behave identically if someone feeds in a
