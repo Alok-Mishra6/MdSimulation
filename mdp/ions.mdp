@@ -1,0 +1,15 @@
+; Not a simulation -- this exists only so that grompp will produce the .tpr
+; that genion needs in order to place counter-ions. Nothing here is integrated.
+
+integrator              = steep
+nsteps                  = 0
+
+cutoff-scheme           = Verlet
+nstlist                 = 10
+pbc                     = xyz
+
+coulombtype             = PME
+rcoulomb                = 1.0
+vdwtype                 = cutoff
+vdw-modifier            = potential-shift-verlet
+rvdw                    = 1.0

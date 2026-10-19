@@ -1,0 +1,64 @@
+; Equilibration stage 2 -- constant pressure, settling the density.
+; Still restrained. After this the box volume has stopped drifting and the
+; water density is right, which is the precondition for production.
+
+define                  = -DPOSRES
+
+integrator              = md
+dt                      = 0.002
+nsteps                  = 50000       ; 100 ps
+nstcomm                 = 100
+
+; ---- output ----
+nstxout-compressed      = 5000
+nstlog                  = 5000
+nstenergy               = 5000
+
+; ---- bonds ----
+continuation            = yes         ; carry on from the NVT stage
+constraint_algorithm    = lincs
+constraints             = h-bonds
+lincs_iter              = 1
+lincs_order             = 4
+
+; ---- neighbour searching ----
+cutoff-scheme           = Verlet
+nstlist                 = 20
+pbc                     = xyz
+
+; ---- electrostatics and van der Waals ----
+coulombtype             = PME
+pme_order               = 4
+fourierspacing          = 0.12
+rcoulomb                = 1.0
+vdwtype                 = cutoff
+vdw-modifier            = potential-shift-verlet
+rvdw                    = 1.0
+DispCorr                = EnerPres
+
+; ---- temperature coupling ----
+tcoupl                  = v-rescale
+tc-grps                 = SOLUTE SOLVENT
+tau_t                   = 0.1     0.1
+ref_t                   = 300     300
+
+; ---- pressure coupling ----
+; c-rescale (stochastic cell rescaling) is used rather than Parrinello-Rahman
+; for a concrete reason: it is the barostat GROMACS supports with the
+; GPU-resident update path, which is where most of the speed on one GPU comes
+; from. It samples the correct NPT ensemble, so this costs nothing physically.
+pcoupl                  = c-rescale
+pcoupltype              = isotropic
+tau_p                   = 2.0
+ref_p                   = 1.0
+compressibility         = 4.5e-5
+
+; Without this, the barostat rescales the box while the position-restraint
+; reference coordinates stay where they were, so the restraints slowly pull
+; against the box and distort the structure. grompp warns about exactly this.
+; 'com' scales the reference coordinates with the box about their centre of
+; mass, which is what you want when restraining a whole macromolecule.
+refcoord_scaling        = com
+
+; ---- velocities ----
+gen_vel                 = no

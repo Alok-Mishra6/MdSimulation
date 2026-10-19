@@ -1,0 +1,10 @@
+# Simulation output. The setup is tracked -- structures, ligand parameters,
+# .mdp files, scripts -- because that is what you need in order to run it.
+# The output is not: one 100 ns run produces a few hundred MB of trajectory
+# plus much larger .gro and .tpr files, and all of it is reproducible from
+# what is tracked here.
+runs/
+
+# Python bytecode
+__pycache__/
+*.pyc

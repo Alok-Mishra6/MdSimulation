@@ -1,0 +1,25 @@
+; Energy minimisation -- steepest descent.
+; Removes the clashes that solvation and ion placement always introduce. This
+; is not dynamics: no temperature, no pressure, no time step that means
+; anything physically.
+
+integrator              = steep
+emtol                   = 1000.0      ; kJ mol^-1 nm^-1; stop when Fmax < this
+emstep                  = 0.01        ; initial step size (nm)
+nsteps                  = 50000       ; a ceiling, not a target
+
+; ---- neighbour searching ----
+cutoff-scheme           = Verlet
+nstlist                 = 10
+pbc                     = xyz
+
+; ---- electrostatics and van der Waals ----
+; AMBER force fields were parameterised with these cutoffs; changing them
+; changes the force field, so they are kept identical in every stage below.
+coulombtype             = PME
+rcoulomb                = 1.0
+vdwtype                 = cutoff
+vdw-modifier            = potential-shift-verlet
+rvdw                    = 1.0
+DispCorr                = EnerPres    ; long-range dispersion, needed for
+                                      ; correct densities with AMBER/TIP3P
