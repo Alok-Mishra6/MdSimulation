@@ -221,9 +221,17 @@ out:
 | GPU path | non-bonded, PME, bonded **and** integration all on the GPU |
 | throughput | 16.6 ns/day |
 | backbone RMSD over 100 ps | 0.172 nm |
-| radius of gyration | 7.118 ± 0.008 nm — stable |
+| radius of gyration | 7.118 ± 0.008 nm — **an artefact**, see below |
 | estradiol, copy 1 | **1.76 ± 0.09 Å** from the protein — in contact |
 | estradiol, copy 2 | **1.80 ± 0.09 Å** — in contact |
+
+**The radius of gyration above is wrong.** The intact dimer's Rg is about
+2.6 nm (the starting structure's). 7.1 nm is what you get when the two
+chains are wrapped into different periodic images, and the analysis step at
+the time (`trjconv -pbc mol -center -ur compact`) did exactly that. It now
+uses `-pbc nojump` from the run's starting structure; see `05_analyse.sh`.
+The head separation and ligand distances were not affected: both are
+measured with periodic minimum-image distances.
 
 Both systems were run: apo at 12.8 ns/day (381,383 atoms, density 990.4 kg/m³)
 and holo at 16.6 ns/day (306,178 atoms, density 991.6 kg/m³).

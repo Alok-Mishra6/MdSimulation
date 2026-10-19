@@ -25,13 +25,24 @@ say "[$1] matching reference for the solute-only trajectory"
 printf 'SOLUTE\n' | $GMX convert-tpr -s md.tpr -n index.ndx -o analysis/solute.tpr
 REF=analysis/solute.tpr
 
-say "[$1] removing periodic jumps and centring"
+say "[$1] removing periodic jumps"
 # Without this, a molecule stepping across the box boundary looks like a huge
 # sudden motion, and every measurement below inherits the artefact.
-printf 'System\nSystem\n' | $GMX trjconv -s "$REF" -f md.xtc \
-    -o analysis/md_fit.xtc -pbc mol -center -ur compact
+#
+# The dimer is two molecules, so keeping each one whole is not enough: -pbc mol
+# can wrap the two chains into different periodic images, and every whole-dimer
+# measurement then sees two halves several nm apart. (It did: Rg jumped from
+# 2.3 to 4.5 nm within 50 ps.) -pbc cluster does not fix it either: the dimer
+# spans most of the box, and the clustering settled on the wrong image.
+#
+# -pbc nojump does, because it starts from the structure given with -s: the
+# equilibrated start of this run, in which the chains and ligands are still
+# assembled as built, and it keeps every frame continuous with that. The dimer
+# may drift out of the unit cell over time; nothing below cares.
 printf 'System\n' | $GMX trjconv -s "$REF" -f md.xtc \
-    -o analysis/first_frame.pdb -dump 0 -pbc mol -ur compact
+    -o analysis/md_fit.xtc -pbc nojump
+printf 'System\n' | $GMX trjconv -s "$REF" -f analysis/md_fit.xtc \
+    -o analysis/first_frame.pdb -dump 0
 
 say "[$1] backbone RMSD against the starting structure"
 printf 'Backbone\nBackbone\n' | $GMX rms -s "$REF" -f analysis/md_fit.xtc \
