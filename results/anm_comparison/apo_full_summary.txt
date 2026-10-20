@@ -1,0 +1,2 @@
+20 PCs of 1001 frames x 358 nodes, gram, bias 1/M, PC1 31.2999% of 391.512 A^2, PC1 rigid leak 4.00072e-09, rank bound 1000, 1 null
+20 PCs (14 above the noise floor) vs 40 ANM modes, RMSIP(5) 0.371467, RMSIP(10) 0.47239, RMSIP(20) 0.498406; PC1 best matches mode 2 at 0.390179, cumulative 0.767687; MSF r = 0.722601, gamma = 0.102142
