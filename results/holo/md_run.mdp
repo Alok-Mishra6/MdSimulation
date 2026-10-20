@@ -1,0 +1,69 @@
+; Production MD -- unrestrained, 100 ns.
+;
+; To change the length, edit nsteps (dt is 2 fs, so 500000 steps = 1 ns) or
+; pass NS=<nanoseconds> to run.sh, which writes a patched copy.
+
+integrator              = md
+dt                      = 0.004
+nsteps                  = 25000000
+nstcomm                 = 100
+
+; ---- output ----
+; 10 ps between frames: 10000 frames over 100 ns. Writing every step would
+; produce a trajectory far larger than the information in it.
+nstxout-compressed      = 2500
+compressed-x-precision  = 1000
+
+; Save only the protein and the ligand, not the ~300,000 water atoms around
+; them. This is the difference between a 15 GB trajectory and a 350 MB one, and
+; nothing measured in 05_analyse.sh looks at individual water molecules.
+; Delete this line if you need the solvent -- for a hydration-shell or
+; water-bridge analysis, for instance -- and budget the disk accordingly.
+compressed-x-grps       = SOLUTE
+nstlog                  = 2500
+nstenergy               = 2500
+nstxout                 = 0           ; no uncompressed coordinates
+nstvout                 = 0
+nstfout                 = 0
+
+; ---- bonds ----
+continuation            = yes
+constraint_algorithm    = lincs
+constraints             = h-bonds
+lincs_iter              = 1
+lincs_order             = 4
+
+; ---- neighbour searching ----
+cutoff-scheme           = Verlet
+nstlist                 = 20          ; mdrun may raise this for GPU runs; that
+                                      ; is an optimisation, not a change of physics
+pbc                     = xyz
+
+; ---- electrostatics and van der Waals ----
+coulombtype             = PME
+pme_order               = 4
+fourierspacing          = 0.12
+rcoulomb                = 1.0
+vdwtype                 = cutoff
+vdw-modifier            = potential-shift-verlet
+rvdw                    = 1.0
+DispCorr                = EnerPres
+
+; ---- temperature coupling ----
+tcoupl                  = v-rescale
+tc-grps                 = SOLUTE SOLVENT
+tau_t                   = 0.1     0.1
+ref_t                   = 300     300
+
+; ---- pressure coupling ----
+pcoupl                  = c-rescale   ; see the note in npt.mdp
+pcoupltype              = isotropic
+tau_p                   = 2.0
+ref_p                   = 1.0
+compressibility         = 4.5e-5
+
+; ---- velocities ----
+gen_vel                 = no
+
+; ---- HMR=yes (scripts/lib.sh) ----
+mass-repartition-factor = 3
