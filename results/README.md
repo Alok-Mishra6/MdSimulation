@@ -31,10 +31,13 @@ inputs) and ran at ~172–178 ns/day with `-ntmpi 4 -ntomp 8 -npme 1`.
 | `solute.tpr` | topology matching the trajectory, for GROMACS tools |
 | `settings.sh`, `*_run.mdp` | the build options and the exact `.mdp` of each stage |
 
-The full 10 ps trajectory (234 MB per system) is over GitHub's file size
-limit and is not included. Every measurement above was made on it, so the
-`.xvg` files are at full resolution; only the coordinates are thinned.
-Rerunning the pipeline regenerates it.
+The full 10 ps trajectories (~230 MB per system) are over GitHub's file size
+limit for a repository, so they are attached to the release
+[`edcr-100ns-2026-10-20`](https://github.com/Alok-Mishra6/MdSimulation/releases/tag/edcr-100ns-2026-10-20)
+instead, with the run input, energies, index groups and built structure
+needed to re-run `05_analyse.sh` on them, and SHA-256 checksums. Every
+measurement here was made on those trajectories, so the `.xvg` files are at
+full resolution; only the coordinates in this folder are thinned.
 
 ```sh
 gmx rms -s holo/solute.tpr -f holo/traj_100ps.xtc     # any GROMACS tool
