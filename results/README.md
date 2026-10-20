@@ -17,6 +17,9 @@ inputs) and ran at ~172–178 ns/day with `-ntmpi 4 -ntomp 8 -npme 1`.
 | `holo/` | **complete**, 100 ns |
 | `apo/` | **complete**, 100 ns |
 
+`anm_comparison/` compares the essential dynamics of both trajectories with
+Quiver's elastic network modes (`enm-pca`, RMSIP).
+
 ## What is in each folder
 
 | file | what it is |
