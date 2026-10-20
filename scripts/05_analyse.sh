@@ -35,21 +35,35 @@ say "[$1] removing periodic jumps"
 # 2.3 to 4.5 nm within 50 ps.) -pbc cluster does not fix it either: the dimer
 # spans most of the box, and the clustering settled on the wrong image.
 #
-# -pbc nojump does, because it starts from the structure given with -s: the
-# equilibrated start of this run, in which the chains and ligands are still
-# assembled as built, and it keeps every frame continuous with that. The dimer
-# may drift out of the unit cell over time; nothing below cares.
-printf 'System\n' | $GMX trjconv -s "$REF" -f md.xtc \
+# -pbc nojump does, because it starts from the structure given with -s and
+# keeps every frame continuous with it. That structure has to be one in which
+# the dimer is certainly in one piece, and md.tpr is not: mdrun wraps each
+# molecule into the box on its own, so after equilibration the trimmed apo
+# system had its chain centres 9.3 nm apart in npt.gro instead of 2.4. The one
+# reliable copy is the system as built, before mdrun ever ran. The solute was
+# position-restrained from there to the start of production, so every atom
+# of the first frame lies within a fraction of a nm of its built position, and
+# nojump puts it in that image. The dimer may drift out of the unit cell over
+# time; nothing below cares.
+printf 'SOLUTE\n' | $GMX trjconv -s md.tpr -f system.gro -n index.ndx \
+    -o analysis/built_solute.gro
+printf 'System\n' | $GMX trjconv -s analysis/built_solute.gro -f md.xtc \
     -o analysis/md_fit.xtc -pbc nojump
 printf 'System\n' | $GMX trjconv -s "$REF" -f analysis/md_fit.xtc \
     -o analysis/first_frame.pdb -dump 0
 
+# RMSD and RMSF need reference coordinates in one piece too, which md.tpr's
+# are not guaranteed to be, so they compare against the first frame of the
+# reassembled trajectory: the start of production. Masses come from GROMACS'
+# standard table, which is what a fit should use anyway, not the HMR ones.
+START=analysis/first_frame.pdb
+
 say "[$1] backbone RMSD against the starting structure"
-printf 'Backbone\nBackbone\n' | $GMX rms -s "$REF" -f analysis/md_fit.xtc \
+printf 'Backbone\nBackbone\n' | $GMX rms -s "$START" -f analysis/md_fit.xtc \
     -o analysis/rmsd.xvg -tu ns
 
 say "[$1] per-residue fluctuation (RMSF)"
-printf 'Backbone\n' | $GMX rmsf -s "$REF" -f analysis/md_fit.xtc \
+printf 'Backbone\n' | $GMX rmsf -s "$START" -f analysis/md_fit.xtc \
     -o analysis/rmsf.xvg -res
 
 say "[$1] radius of gyration"
