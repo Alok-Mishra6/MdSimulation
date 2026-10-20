@@ -15,7 +15,7 @@ inputs) and ran at ~172–178 ns/day with `-ntmpi 4 -ntomp 8 -npme 1`.
 | system | status |
 |---|---|
 | `holo/` | **complete**, 100 ns |
-| `apo/` | running; added when it finishes |
+| `apo/` | **complete**, 100 ns |
 
 ## What is in each folder
 
@@ -56,14 +56,50 @@ came off and stayed there for 100 ns. The closest they came was 43.0 Å, far
 from TetR induced (38.88 Å) or TetR on DNA (36.13 Å). Both ligands stayed
 bound.
 
+## Apo, 100 ns
+
+| | |
+|---|---|
+| head separation | **49.30 ± 1.10 Å** (start 45.15 Å; 10–100 ns: 49.45 ± 0.10 Å) |
+| backbone RMSD | 0.28 ± 0.05 nm |
+| radius of gyration | 2.310 ± 0.013 nm |
+| temperature / density | 300.0 K / 1,014 kg/m³ |
+
+The heads opened by ~4 Å over the first 15 ns and then held at 48.6–50.1 Å
+(5 ns block means) for the remaining 85 ns. The closest they came was
+44.0 Å.
+
+## Apo against holo
+
+Head separation, residues 56–63, mean over 10–100 ns with the standard error
+over eighteen 5 ns blocks:
+
+| | holo (estradiol) | apo (no ligand) | apo − holo |
+|---|---|---|---|
+| start of production | 44.00 Å | 45.15 Å | +1.15 Å |
+| 10–100 ns | 46.71 ± 0.11 Å | 49.45 ± 0.10 Å | **+2.73 ± 0.15 Å** |
+| range of 5 ns block means | 45.90–47.83 Å | 48.65–50.08 Å | no overlap |
+| change from start | +2.71 Å | +4.30 Å | |
+
+- Both dimers open relative to their AlphaFold starting structures, and
+  neither moves towards a DNA-compatible separation (TetR on DNA 36.13 Å,
+  TetR induced 38.88 Å). Without DNA in the box that is not surprising.
+- The ligand-free dimer sits ~2.7 Å wider than the estradiol-bound one, and
+  no 5 ns block of either run reaches the other's range. Taken at face
+  value, estradiol keeps the heads closer together -- the opposite direction
+  to TetR, where the inducer moves the heads apart.
+- Of the 2.7 Å, 1.15 Å was already there at the start, and the rest built
+  up during the first ~15 ns. See below for why that start matters.
+
 ## Read with care
 
 - **Apo and holo start from different AlphaFold predictions**
   (`fold_edcr_alpha3_seed37` model 0 and `fold_edcr_est_seed39` model 2; see
-  `input/PROVENANCE.md`), already 1.15 Å apart in head separation. Any
-  apo–holo difference mixes the ligand effect with the difference between
-  the two models. Simulating the holo model's protein without estradiol would
-  separate the two.
+  `input/PROVENANCE.md`), already 1.15 Å apart in head separation. The
+  apo–holo difference above therefore mixes the ligand effect with the
+  difference between the two models, and is not by itself evidence of an
+  estradiol effect. Simulating the holo model's protein without estradiol
+  would separate the two.
 - One trajectory per system. Block errors understate the uncertainty of
   slow domain motions; replicas are needed for a claim about estradiol.
 - The construct lacks residues 1–14, and HMR slows dynamics somewhat: compare
