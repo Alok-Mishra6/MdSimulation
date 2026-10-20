@@ -5,6 +5,8 @@
 #   ./run.sh holo           the same with estradiol bound
 #   ./run.sh both           one after the other
 #   NS=10 ./run.sh apo      a 10 ns production run instead of the default 100
+#   NTERM_TRIM=14 HMR=yes ./run.sh both
+#                           12-15x faster: tail-trimmed dimer, 4 fs steps (README)
 #   ./run.sh apo --build    stop after building the system
 #   ./run.sh apo --analyse  only re-run the analysis on an existing trajectory
 #

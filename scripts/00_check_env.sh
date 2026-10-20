@@ -7,6 +7,8 @@ say "GROMACS"
 find_gmx
 $GMX --version 2>/dev/null | grep -iE "^(GROMACS version|Precision|GPU support|SIMD instructions|CUDA runtime)" \
     | sed 's/^/    /'
+if [ "$USE_GPU" = yes ]; then info "mdrun path: GPU-resident ($MD_OFFLOAD)"
+else                          info "mdrun path: CPU only (no GPU support in this build, or USE_GPU=no)"; fi
 
 say "GPU"
 if command -v nvidia-smi >/dev/null 2>&1; then

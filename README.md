@@ -38,7 +38,7 @@ without any alignment step.
 | | |
 |---|---|
 | GROMACS | **2023 or newer**, built with CUDA. Developed and tested on 2026.3 |
-| a GPU | NVIDIA, any modern card. ~1.5 GB of VRAM is enough |
+| a GPU | NVIDIA, any modern card. ~1.5 GB of VRAM is enough. Optional: see "Without a GPU" |
 | disk | ~400 MB per 100 ns per system (the trajectory stores the solute only; see `mdp/md.mdp`) |
 | Python 3 | only for three small helper scripts; no packages needed |
 
@@ -104,6 +104,56 @@ which is typically worth a factor of two on a single card. The barostat is
 `c-rescale` specifically because it is the one GROMACS supports alongside
 `-update gpu`; it samples the correct NPT ensemble, so the speed costs nothing
 physically.
+
+### Making it 12–15x faster: `NTERM_TRIM` and `HMR`
+
+```sh
+NTERM_TRIM=14 HMR=yes ./run.sh both
+```
+
+Two build-time options, both off by default so the full-length setup verified
+below stays the default:
+
+- **`NTERM_TRIM=14`** removes residues 1–14 of each chain and caps residue 15
+  with an acetyl group (`scripts/trim_nterm.py`). Those residues are a
+  low-confidence tail (pLDDT 42–56) that AlphaFold left pointing more than 4 nm
+  away from the core, and they alone set the box: the solute is 14.9 nm across
+  with them and 8.0 nm without. The systems shrink from 381,383 / 306,178 atoms
+  to **80,330 / 80,298**. The recognition helices (56–63) keep their residue
+  numbers, and both estradiol copies sit ≥ 26 Å from any removed atom. It is a
+  change of construct, though: residues 12–19 are Arg-rich and might contact
+  DNA in the real complex, which this box does not contain anyway.
+- **`HMR=yes`** sets `mass-repartition-factor = 3`: hydrogens become 3x heavier,
+  the mass taken from the atom each is bonded to, and production runs at
+  **4 fs**. Equilibrium properties do not depend on the masses; dynamics are
+  somewhat slowed, so do not read rates off these trajectories. GROMACS applies
+  it to water as well. Equilibration stays at 2 fs. Expect LINCS warnings at
+  4 fs, all on the methionine S-CH3 methyls (about 740 an hour for this dimer,
+  constraint error under 1.5 %); `04_production.sh` raises mdrun's abort limit
+  of 1000 warnings so the run does not stop every 80 minutes.
+
+The options are written to `runs/<system>/settings.sh` by `01_build.sh`, and
+every later stage reads them from there, so a run cannot be half one and half
+the other. The `.mdp` each stage actually ran is kept as `runs/<system>/*_run.mdp`.
+
+### Without a GPU
+
+The scripts check how GROMACS was built. A CPU-only build gets no offload flags
+and runs everything on the CPU; `USE_GPU=no` forces that path on a GPU build.
+Measured on a 16-core Ryzen 9 9950X (AVX-512, GROMACS 2026.3, no GPU), ns/day:
+
+| system | layout | apo | holo |
+|---|---|---|---|
+| full length, 2 fs | all 32 threads, mdrun's own choice | 12.1 | 14.4 |
+| full length, 2 fs | both at once, one per 8-core CCD | 6.2 | 7.0 |
+| **trimmed + HMR, 4 fs** | **all 32 threads, `-ntmpi 4 -ntomp 8 -npme 1`** | **177** | **170** |
+| trimmed + HMR, 4 fs | all 32 threads, mdrun's own choice | 139 | 137 |
+| trimmed + HMR, 4 fs | both at once, one per CCD | 76 | 73 |
+
+So on this CPU the full-length pair takes about 15 days for 100 ns each, and
+the trimmed HMR pair about 14 hours each. One system at a time on the whole
+machine beat one per CCD for the small systems; mdrun's default layout leaves
+~25 % on the table, so pass the layout explicitly through `GMX_MDRUN_EXTRA`.
 
 ## Simulation parameters
 
@@ -171,9 +221,17 @@ out:
 | GPU path | non-bonded, PME, bonded **and** integration all on the GPU |
 | throughput | 16.6 ns/day |
 | backbone RMSD over 100 ps | 0.172 nm |
-| radius of gyration | 7.118 ± 0.008 nm — stable |
+| radius of gyration | 7.118 ± 0.008 nm — **an artefact**, see below |
 | estradiol, copy 1 | **1.76 ± 0.09 Å** from the protein — in contact |
 | estradiol, copy 2 | **1.80 ± 0.09 Å** — in contact |
+
+**The radius of gyration above is wrong.** The intact dimer's Rg is about
+2.6 nm (the starting structure's). 7.1 nm is what you get when the two
+chains are wrapped into different periodic images, and the analysis step at
+the time (`trjconv -pbc mol -center -ur compact`) did exactly that. It now
+uses `-pbc nojump` from the run's starting structure; see `05_analyse.sh`.
+The head separation and ligand distances were not affected: both are
+measured with periodic minimum-image distances.
 
 Both systems were run: apo at 12.8 ns/day (381,383 atoms, density 990.4 kg/m³)
 and holo at 16.6 ns/day (306,178 atoms, density 991.6 kg/m³).

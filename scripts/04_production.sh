@@ -11,16 +11,29 @@
 find_gmx
 system_inputs "${1:?usage: 04_production.sh <apo|holo> [NS=<n>]}"
 cd "$WORK"
+load_settings
 
 [ -f npt.gro ] || die "no npt.gro -- run 03_equilibrate.sh first"
 
-MDPFILE="$MDP/md.mdp"
+MDPFILE=$(stage_mdp md)
 if [ -n "${NS:-}" ]; then
-    STEPS=$(awk -v ns="$NS" 'BEGIN{printf "%d", ns*500000}')   # dt = 2 fs
+    DT=$(awk '$1 == "dt" {print $3}' "$MDPFILE")             # ps
+    STEPS=$(awk -v ns="$NS" -v dt="$DT" 'BEGIN{printf "%d", ns * 1000 / dt + 0.5}')
     sed "s/^nsteps.*/nsteps                  = $STEPS   ; ${NS} ns (set by run.sh)/" \
-        "$MDP/md.mdp" > md_patched.mdp
-    MDPFILE=md_patched.mdp
-    info "production length overridden: ${NS} ns ($STEPS steps)"
+        "$MDPFILE" > "$MDPFILE.tmp" && mv "$MDPFILE.tmp" "$MDPFILE"
+    info "production length overridden: ${NS} ns ($STEPS steps of $DT ps)"
+fi
+
+if [ "$HMR" = yes ]; then
+    # At 4 fs the methionine S-CH3 methyls (atom CE) now and then rotate more
+    # than 30 degrees in one step, which LINCS reports as a warning: ~740 an
+    # hour on the EdcR dimer, every one of them on a Met CE hydrogen, with
+    # constraint deviations under 1.5 %. mdrun aborts after 1000 warnings per
+    # process, which here is every ~80 minutes. A real blow-up produces
+    # thousands a second, so a limit of 100000 still catches one.
+    GMX_MAXCONSTRWARN="${GMX_MAXCONSTRWARN:-100000}"
+    export GMX_MAXCONSTRWARN
+    info "HMR: LINCS warning limit raised to $GMX_MAXCONSTRWARN (Met CE methyls)"
 fi
 
 say "[$1] production"
@@ -37,7 +50,7 @@ if [ -f md.cpt ]; then
     RESUME="-cpi md.cpt -append"
 fi
 # shellcheck disable=SC2086
-$GMX mdrun -deffnm md -nb gpu -pme gpu -bonded gpu -update gpu \
+$GMX mdrun -deffnm md $MD_OFFLOAD \
            $RESUME ${GMX_MDRUN_EXTRA:-}
 
 say "[$1] trajectory written"

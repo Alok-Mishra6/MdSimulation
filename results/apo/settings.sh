@@ -1,0 +1,2 @@
+NTERM_TRIM=14
+HMR=yes

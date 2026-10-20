@@ -1,0 +1,57 @@
+; Equilibration stage 1 -- constant volume, heating to 300 K.
+; The solute is held still (-DPOSRES) so the water relaxes around it rather
+; than the structure being dragged by a solvent that has not settled yet.
+
+define                  = -DPOSRES
+
+integrator              = md
+dt                      = 0.002       ; 2 fs, safe because h-bonds are constrained
+nsteps                  = 50000       ; 100 ps
+nstcomm                 = 100
+
+; ---- output ----
+nstxout-compressed      = 5000
+nstlog                  = 5000
+nstenergy               = 5000
+
+; ---- bonds ----
+continuation            = no          ; apply constraints to the start structure
+constraint_algorithm    = lincs
+constraints             = h-bonds
+lincs_iter              = 1
+lincs_order             = 4
+
+; ---- neighbour searching ----
+cutoff-scheme           = Verlet
+nstlist                 = 20
+pbc                     = xyz
+
+; ---- electrostatics and van der Waals ----
+coulombtype             = PME
+pme_order               = 4
+fourierspacing          = 0.12
+rcoulomb                = 1.0
+vdwtype                 = cutoff
+vdw-modifier            = potential-shift-verlet
+rvdw                    = 1.0
+DispCorr                = EnerPres
+
+; ---- temperature coupling ----
+; v-rescale is a stochastic thermostat: unlike Berendsen it samples the true
+; canonical ensemble, so it is correct to use in production as well.
+tcoupl                  = v-rescale
+tc-grps                 = SOLUTE SOLVENT
+tau_t                   = 0.1     0.1
+ref_t                   = 300     300
+
+; ---- pressure coupling ----
+pcoupl                  = no          ; this is the NVT stage
+
+; ---- velocities ----
+gen_vel                 = yes
+gen_temp                = 300
+gen_seed                = -1          ; -1 = from the system clock; set an
+                                      ; integer here to make a run repeatable
+
+; ---- HMR=yes (scripts/lib.sh) ----
+mass-repartition-factor = 3

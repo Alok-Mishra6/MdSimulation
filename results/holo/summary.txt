@@ -1,0 +1,23 @@
+
+  system                     holo
+  trajectory length          100.000 ns, 10001 frames
+
+  backbone RMSD              0.268 +/- 0.049 nm   (range 0.000 to 0.381)
+  radius of gyration         2.317 +/- 0.010 nm   (range 2.278 to 2.358)
+  per-residue RMSF           0.121 +/- 0.126 nm   (range 0.054 to 1.064)
+
+  head separation            46.70 +/- 1.06 A   (range 42.99 to 50.63)
+
+  for comparison:
+    AlphaFold 3 prediction   43.97 +/- 0.72 A
+    TetR induced  (2TRT)     38.88 A
+    TetR on DNA   (1QPI)     36.13 A
+
+  started at 44.00 A, mean 46.70 A (+2.70 A)
+  closest approach 42.99 A, i.e. 1.01 A of closing
+  -> stays wider than both TetR reference structures
+
+  estradiol -- minimum distance to the protein:
+    EST_209  1.76 +/- 0.12 A  (max 2.26)  in contact, has not moved
+    EST_210  1.75 +/- 0.11 A  (max 2.25)  in contact, has not moved
+

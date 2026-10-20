@@ -1,0 +1,19 @@
+
+  system                     apo
+  trajectory length          100.000 ns, 10001 frames
+
+  backbone RMSD              0.276 +/- 0.045 nm   (range 0.000 to 0.390)
+  radius of gyration         2.310 +/- 0.013 nm   (range 2.265 to 2.357)
+  per-residue RMSF           0.140 +/- 0.143 nm   (range 0.061 to 1.272)
+
+  head separation            49.30 +/- 1.10 A   (range 44.00 to 52.91)
+
+  for comparison:
+    AlphaFold 3 prediction   43.97 +/- 0.72 A
+    TetR induced  (2TRT)     38.88 A
+    TetR on DNA   (1QPI)     36.13 A
+
+  started at 45.15 A, mean 49.30 A (+4.15 A)
+  closest approach 44.00 A, i.e. 1.15 A of closing
+  -> stays wider than both TetR reference structures
+
